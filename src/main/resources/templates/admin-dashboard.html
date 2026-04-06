@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-danger">
+        <div class="container">
+            <a class="navbar-brand" href="#">OTS Admin</a>
+            <form th:action="@{/logout}" method="post" class="d-flex">
+                <button class="btn btn-outline-light btn-sm" type="submit">Logout</button>
+            </form>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <!-- Success Alerts -->
+        <div th:if="${param.enrolled}" class="alert alert-success alert-dismissible fade show" role="alert">
+            Student enrolled successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${param.teacherAssigned}" class="alert alert-success alert-dismissible fade show" role="alert">
+            Teacher assigned successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${param.deleted}" class="alert alert-success alert-dismissible fade show" role="alert">
+            User deleted successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${param.courseCreated}" class="alert alert-success alert-dismissible fade show" role="alert">
+            Course created successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${param.courseUpdated}" class="alert alert-success alert-dismissible fade show" role="alert">
+            Course updated successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <h3>User Management</h3>
+                <div class="card p-3 shadow-sm mb-4">
+                    <h5>Teachers</h5>
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Courses</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="user : ${teachers}">
+                                <td th:text="${user.id}"></td>
+                                <td th:text="${user.username}"></td>
+                                <td th:text="${user.email}"></td>
+                                <td>
+                                    <span th:each="course, iterStat : ${user.taughtCourses}">
+                                        <span th:text="${course.name}"></span><span th:if="${!iterStat.last}">, </span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <form th:action="@{/admin/delete-user}" method="post"
+                                        onsubmit="return confirm('Are you sure?');" style="display:inline;">
+                                        <input type="hidden" name="userId" th:value="${user.id}">
+                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card p-3 shadow-sm mb-4">
+                    <h5>Students</h5>
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Courses</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="user : ${students}">
+                                <td th:text="${user.id}"></td>
+                                <td th:text="${user.username}"></td>
+                                <td th:text="${user.email}"></td>
+                                <td>
+                                    <span th:each="course, iterStat : ${user.enrolledCourses}">
+                                        <span th:text="${course.name}"></span><span th:if="${!iterStat.last}">, </span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <form th:action="@{/admin/delete-user}" method="post"
+                                        onsubmit="return confirm('Are you sure?');" style="display:inline;">
+                                        <input type="hidden" name="userId" th:value="${user.id}">
+                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="mt-4 d-flex justify-content-between align-items-center">
+                    Course Management
+                    <a href="/admin/create-course" class="btn btn-success btn-sm">Create New Course</a>
+                </h3>
+                <div class="card p-3 shadow-sm">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Teacher</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="course : ${courses}">
+                                <td th:text="${course.id}"></td>
+                                <td th:text="${course.name}"></td>
+                                <td th:text="${course.teacher != null ? course.teacher.username : 'None'}"></td>
+                                <td>
+                                    <a th:href="@{/admin/view-enrolled(courseId=${course.id})}"
+                                        class="btn btn-info btn-sm">View Enrolled</a>
+                                    <a th:href="@{/admin/edit-course(courseId=${course.id})}"
+                                        class="btn btn-warning btn-sm">Edit</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h3>Enroll Student</h3>
+                <div class="card p-3 shadow-sm mb-3">
+                    <form th:action="@{/admin/enroll}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Select Student</label>
+                            <select name="studentId" class="form-select" required>
+                                <option th:each="student : ${students}" th:value="${student.id}"
+                                    th:text="${student.username}"></option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Select Course</label>
+                            <select name="courseId" class="form-select" required>
+                                <option th:each="course : ${courses}" th:value="${course.id}" th:text="${course.name}">
+                                </option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Enroll Student</button>
+                    </form>
+                </div>
+
+                <h3>Assign Teacher</h3>
+                <div class="card p-3 shadow-sm">
+                    <form th:action="@{/admin/assign-teacher}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Select Teacher</label>
+                            <select name="teacherId" class="form-select" required>
+                                <option th:each="teacher : ${teachers}" th:value="${teacher.id}"
+                                    th:text="${teacher.username}"></option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Select Course</label>
+                            <select name="courseId" class="form-select" required>
+                                <option th:each="course : ${courses}" th:value="${course.id}" th:text="${course.name}">
+                                </option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Assign Teacher</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

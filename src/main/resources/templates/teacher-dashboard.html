@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Teacher Dashboard - OTS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark px-3">
+        <span class="navbar-brand">OTS - Teacher Panel</span>
+        <div class="text-white">Welcome, <span th:text="${user.username}"></span> |
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <button type="submit" class="btn btn-link text-white p-0" style="text-decoration: none;">Logout</button>
+            </form>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <h2>Your Courses</h2>
+        <div class="row">
+            <div th:each="course : ${courses}" class="col-md-6 mb-3">
+                <div class="card p-3">
+                    <h4 th:text="${course.name}"></h4>
+                    <p th:text="${course.description}"></p>
+
+                    <h5 class="mt-3">Create New Assignment</h5>
+                    <form th:action="@{/teacher/create-assignment}" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="courseId" th:value="${course.id}">
+                        <input type="text" name="title" class="form-control mb-2" placeholder="Title" required>
+                        <textarea name="description" class="form-control mb-2" placeholder="Description"></textarea>
+                        <div class="mb-2">
+                            <label class="form-label small">Deadline</label>
+                            <input type="datetime-local" name="deadline" class="form-control form-control-sm" required>
+                        </div>
+                        <input type="file" name="file" class="form-control mb-2" required>
+                        <button type="submit" class="btn btn-primary btn-sm">Post Assignment</button>
+                    </form>
+
+                    <h5 class="mt-4">Add Study Material</h5>
+                    <form th:action="@{/teacher/add-material}" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="courseId" th:value="${course.id}">
+                        <input type="text" name="title" class="form-control mb-2 form-control-sm"
+                            placeholder="Material Title" required>
+                        <select name="type" class="form-select mb-2 form-select-sm"
+                            onchange="toggleMaterialInput(this, this.form)">
+                            <option value="VIDEO">Video Link</option>
+                            <option value="PDF">PDF File</option>
+                        </select>
+                        <input type="url" name="videoUrl" class="form-control mb-2 form-control-sm video-input"
+                            placeholder="YouTube URL">
+                        <input type="file" name="file" class="form-control mb-2 form-control-sm pdf-input"
+                            style="display:none;">
+                        <button type="submit" class="btn btn-secondary btn-sm w-100">Add Material</button>
+                    </form>
+
+                    <h5 class="mt-4">Existing Resources</h5>
+                    <ul class="list-group mb-3">
+                        <li th:each="material : ${course.studyMaterials}"
+                            class="list-group-item d-flex justify-content-between align-items-center p-2">
+                            <div class="d-flex align-items-center">
+                                <span th:text="${material.title}" class="me-2"></span>
+                                <span class="badge bg-secondary me-2" th:text="${material.type}"></span>
+
+                                <!-- Watch Video Link -->
+                                <a th:if="${material.type == 'VIDEO'}" th:href="${material.content}" target="_blank"
+                                    class="btn btn-outline-primary btn-sm py-0 px-2">Watch</a>
+
+                                <!-- View PDF Link -->
+                                <a th:if="${material.type == 'PDF'}"
+                                    th:href="@{/files/{name}(name=${material.content})}" target="_blank"
+                                    class="btn btn-outline-success btn-sm py-0 px-2">View PDF</a>
+
+                                <!-- Delete Material -->
+                                <form th:action="@{/teacher/delete-material}" method="post" class="ms-2 d-inline"
+                                    onsubmit="return confirm('Delete this study material?');">
+                                    <input type="hidden" name="materialId" th:value="${material.id}">
+                                    <button type="submit"
+                                        class="btn btn-outline-danger btn-sm py-0 px-2">Delete</button>
+                                </form>
+                            </div>
+                        </li>
+                        <li th:each="assignment : ${course.assignments}"
+                            class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <span th:text="${assignment.title}"></span><br>
+                                <small class="text-danger">Deadline: <span
+                                        th:text="${#temporals.format(assignment.deadline, 'dd-MMM-yyyy HH:mm')}"></span></small>
+                            </div>
+                            <div class="mt-2">
+                                <a th:href="@{/files/{name}(name=${assignment.filePath})}"
+                                    class="btn btn-outline-secondary btn-sm" target="_blank">Download Brief</a>
+                                <a th:href="@{/teacher/submissions(assignmentId=${assignment.id})}"
+                                    class="btn btn-info btn-sm">View Submissions</a>
+                                <a th:href="@{/teacher/view-pending(assignmentId=${assignment.id})}"
+                                    class="btn btn-outline-danger btn-sm">View Pending</a>
+
+                                <!-- Delete Assignment -->
+                                <form th:action="@{/teacher/delete-assignment}" method="post" class="d-inline ms-1"
+                                    onsubmit="return confirm('Delete this assignment and all submissions?');">
+                                    <input type="hidden" name="assignmentId" th:value="${assignment.id}">
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <h5 class="mt-4">Quizzes</h5>
+                    <a th:href="@{/teacher/create-quiz(courseId=${course.id})}"
+                        class="btn btn-warning btn-sm mb-2">Create New Quiz</a>
+                    <ul class="list-group mb-3">
+                        <li th:each="quiz : ${course.quizzes}" class="list-group-item">
+                            <span th:text="${quiz.title}"></span>
+                            <div class="float-end">
+                                <a th:href="@{/teacher/quiz-results(quizId=${quiz.id})}"
+                                    class="btn btn-sm btn-info text-white me-1">View Results</a>
+                                <a th:href="@{/teacher/view-quiz(quizId=${quiz.id})}"
+                                    class="btn btn-sm btn-outline-secondary">Edit/View</a>
+                                <!-- Delete Quiz -->
+                                <form th:action="@{/teacher/delete-quiz}" method="post" class="d-inline ms-1"
+                                    onsubmit="return confirm('Delete this quiz and all results?');">
+                                    <input type="hidden" name="quizId" th:value="${quiz.id}">
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function toggleMaterialInput(select, form) {
+            const videoInput = form.querySelector('.video-input');
+            const pdfInput = form.querySelector('.pdf-input');
+            if (select.value === 'VIDEO') {
+                videoInput.style.display = 'block';
+                videoInput.required = true;
+                pdfInput.style.display = 'none';
+                pdfInput.required = false;
+            } else {
+                videoInput.style.display = 'none';
+                videoInput.required = false;
+                pdfInput.style.display = 'block';
+                pdfInput.required = true;
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Student Dashboard - OTS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+
+<body class="bg-light">
+    <nav class="navbar navbar-primary bg-primary px-3">
+        <span class="navbar-brand text-white">OTS - Student Panel</span>
+        <div class="text-white">Welcome, <span th:text="${user.username}"></span> |
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <button type="submit" class="btn btn-link text-white p-0" style="text-decoration: none;">Logout</button>
+            </form>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-8">
+                <h2>Your Courses</h2>
+                <div th:each="course : ${enrolledCourses}" class="card p-3 mb-4 shadow-sm">
+                    <h3 th:text="${course.name}" class="card-title text-primary"></h3>
+                    <p th:text="${course.description}" class="text-muted"></p>
+                    
+                    <!-- Assignments Section -->
+                    <h5 class="mt-3 border-bottom pb-2">Assignments</h5>
+                    <div th:if="${#lists.isEmpty(course.assignments)}" class="text-muted small">No assignments yet.</div>
+                    <div th:each="assignment : ${course.assignments}" class="card p-3 mb-2 bg-light border-0">
+                        <div class="d-flex justify-content-between">
+                            <h6 th:text="${assignment.title}" class="mb-1"></h6>
+                            <small class="text-danger">Deadline: <span th:text="${#temporals.format(assignment.deadline, 'dd-MMM-yyyy HH:mm')}"></span></small>
+                        </div>
+                        <p th:text="${assignment.description}" class="small mb-2"></p>
+                        
+                        <div class="d-flex gap-2 align-items-center">
+                            <a th:href="@{'/files/' + ${assignment.filePath}}" class="btn btn-sm btn-outline-secondary py-0"
+                                target="_blank">Download Brief</a>
+                            
+                            <!-- Check Submission Code -->
+                            <!-- We scan the 'submissions' list from model to see if this assignment is submitted -->
+                            <div th:if="${!#lists.isEmpty(submissions.?[assignment.id == __${assignment.id}__])}" class="ms-auto"
+                                 th:with="sub=${submissions.?[assignment.id == __${assignment.id}__][0]}">
+                                <span class="badge bg-success">Submitted</span>
+                                <span class="badge bg-light text-dark border" th:text="'Grade: ' + (${sub.grade} ?: 'Pending')"></span>
+                            </div>
+                            
+                            <div th:if="${#lists.isEmpty(submissions.?[assignment.id == __${assignment.id}__])}" class="ms-auto">
+                                <form th:action="@{/student/submit-task}" method="post" enctype="multipart/form-data" class="d-flex gap-2">
+                                    <input type="hidden" name="assignmentId" th:value="${assignment.id}">
+                                    <input type="file" name="file" class="form-control form-control-sm" style="width: 200px;" required>
+                                    <button type="submit" class="btn btn-success btn-sm py-0">Submit</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Study Materials Section -->
+                    <h5 class="mt-4 border-bottom pb-2">Study Materials</h5>
+                    <div th:if="${#lists.isEmpty(course.studyMaterials)}" class="text-muted small">No materials uploaded.</div>
+                    <ul class="list-group list-group-flush">
+                        <li th:each="material : ${course.studyMaterials}" class="list-group-item bg-transparent px-0 py-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong th:text="${material.title}"></strong>
+                                <span class="badge bg-info text-dark ms-2" th:text="${material.type}"></span>
+                            </div>
+                            <div>
+                                <a th:if="${material.type == 'VIDEO'}" th:href="${material.content}" target="_blank"
+                                   class="btn btn-sm btn-outline-danger py-0">Watch</a>
+                                <a th:if="${material.type == 'PDF'}" th:href="@{'/files/' + ${material.content}}"
+                                   target="_blank" class="btn btn-sm btn-outline-success py-0">View PDF</a>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <!-- Quizzes Section -->
+                    <h5 class="mt-4 border-bottom pb-2">Quizzes</h5>
+                     <div th:if="${#lists.isEmpty(course.quizzes)}" class="text-muted small">No quizzes available.</div>
+                    <ul class="list-group list-group-flush">
+                         <li th:each="quiz : ${course.quizzes}" class="list-group-item bg-transparent px-0 py-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong th:text="${quiz.title}"></strong>
+                                <small class="text-muted ms-2" th:text="${quiz.timeLimitMinutes + ' mins'}"></small>
+                            </div>
+                            <a th:href="@{/student/take-quiz(quizId=${quiz.id})}" class="btn btn-primary btn-sm py-0">Take Quiz</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h3 class="mt-4">Available Courses</h3>
+            </div>
+        </div>
+    </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Quiz Results - OTS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark px-3">
+        <span class="navbar-brand">OTS - Teacher Panel</span>
+        <a th:href="@{/dashboard}" class="btn btn-outline-light btn-sm">Back to Dashboard</a>
+    </nav>
+    <div class="container mt-4">
+        <div class="card p-4 shadow-sm">
+            <h2 class="text-primary" th:text="${quiz.title} + ' - Results'"></h2>
+            <p class="text-muted">Course: <span th:text="${quiz.course.name}"></span></p>
+
+            <div class="row mt-4">
+                <!-- Submitted Results Column -->
+                <div class="col-md-7">
+                    <h4 class="text-success border-bottom pb-2">Submissions</h4>
+                    <div th:if="${#lists.isEmpty(results)}" class="alert alert-info">
+                        No students have submitted this quiz yet.
+                    </div>
+                    <table th:if="${!#lists.isEmpty(results)}" class="table table-hover mt-3">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student</th>
+                                <th>Score</th>
+                                <th>Submitted At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="result : ${results}">
+                                <td th:text="${result.student.username}"></td>
+                                <td>
+                                    <span class="badge bg-success fs-6" 
+                                          th:text="${result.score} + ' / ' + ${result.totalQuestions}"></span>
+                                </td>
+                                <td th:text="${#temporals.format(result.submissionTime, 'dd-MMM-yyyy HH:mm')}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pending Students Column -->
+                <div class="col-md-5">
+                    <h4 class="text-danger border-bottom pb-2">Pending Students</h4>
+                    <div th:if="${#lists.isEmpty(pendingStudents)}" class="alert alert-success mt-3">
+                        All students have completed this quiz!
+                    </div>
+                    <ul th:if="${!#lists.isEmpty(pendingStudents)}" class="list-group mt-3">
+                        <li th:each="student : ${pendingStudents}" class="list-group-item d-flex justify-content-between align-items-center">
+                            <span th:text="${student.username}"></span>
+                            <span class="badge bg-danger rounded-pill">Not Submitted</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
