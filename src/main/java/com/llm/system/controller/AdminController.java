@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.llm.system.entity.Course;
 import com.llm.system.entity.User;
+import com.llm.system.entity.Submission;
 import com.llm.system.repository.CourseRepository;
 import com.llm.system.repository.UserRepository;
+import com.llm.system.repository.SubmissionRepository;
 
 @Controller
 public class AdminController {
@@ -24,6 +26,9 @@ public class AdminController {
 
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private SubmissionRepository submissionRepository;
 
     @GetMapping("/admin/dashboard")
     public String dashboard(Model model) {
@@ -90,6 +95,9 @@ public class AdminController {
                 course.getStudents().remove(user);
                 courseRepository.save(course);
             }
+            // Delete all submissions by this student to avoid foreign key constraint violations
+            List<Submission> submissions = submissionRepository.findByStudent(user);
+            submissionRepository.deleteAll(submissions);
         }
         
         // Clear teacher from courses (for teachers)
