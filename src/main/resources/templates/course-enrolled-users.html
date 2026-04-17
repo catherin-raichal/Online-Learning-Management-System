@@ -13,6 +13,15 @@
         </div>
     </nav>
     <div class="container mt-4">
+        <div th:if="${param.unenrollSuccess}" class="alert alert-success alert-dismissible fade show" role="alert">
+            Student unenrolled successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${param.unassignSuccess}" class="alert alert-success alert-dismissible fade show" role="alert">
+            Teacher unassigned successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3>Enrolled Users for: <span th:text="${course.name}"></span></h3>
             <a href="/admin/dashboard" class="btn btn-secondary btn-sm">Back to Dashboard</a>
@@ -26,6 +35,7 @@
                         <th>ID</th>
                         <th>Username</th>
                         <th>Email</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -33,9 +43,15 @@
                         <td th:text="${teacher.id}"></td>
                         <td th:text="${teacher.username}"></td>
                         <td th:text="${teacher.email}"></td>
+                        <td>
+                            <form th:action="@{/admin/unassign-teacher}" method="post" onsubmit="return confirm('Remove teacher from this course?');">
+                                <input type="hidden" name="courseId" th:value="${course.id}">
+                                <button type="submit" class="btn btn-warning btn-sm">Remove</button>
+                            </form>
+                        </td>
                     </tr>
                     <tr th:if="${teacher == null}">
-                        <td colspan="3" class="text-center text-muted">No teacher assigned.</td>
+                        <td colspan="4" class="text-center text-muted">No teacher assigned.</td>
                     </tr>
                 </tbody>
             </table>
@@ -49,6 +65,7 @@
                         <th>ID</th>
                         <th>Username</th>
                         <th>Email</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -56,9 +73,16 @@
                         <td th:text="${student.id}"></td>
                         <td th:text="${student.username}"></td>
                         <td th:text="${student.email}"></td>
+                        <td>
+                            <form th:action="@{/admin/unenroll}" method="post" onsubmit="return confirm('Remove student from this course?');">
+                                <input type="hidden" name="studentId" th:value="${student.id}">
+                                <input type="hidden" name="courseId" th:value="${course.id}">
+                                <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                            </form>
+                        </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(students)}">
-                        <td colspan="3" class="text-center text-muted">No students enrolled.</td>
+                        <td colspan="4" class="text-center text-muted">No students enrolled.</td>
                     </tr>
                 </tbody>
             </table>

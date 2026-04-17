@@ -60,6 +60,25 @@ public class AdminController {
         return "redirect:/admin/dashboard?teacherAssigned";
     }
 
+    @PostMapping("/admin/unassign-teacher")
+    public String unassignTeacher(@RequestParam("courseId") Long courseId) {
+        Course course = courseRepository.findById(courseId).orElseThrow();
+        
+        course.setTeacher(null);
+        courseRepository.save(course);
+        return "redirect:/admin/view-enrolled?courseId=" + courseId + "&unassignSuccess";
+    }
+
+    @PostMapping("/admin/unenroll")
+    public String unenrollStudent(@RequestParam("studentId") Long studentId, @RequestParam("courseId") Long courseId) {
+        User student = userRepository.findById(studentId).orElseThrow();
+        Course course = courseRepository.findById(courseId).orElseThrow();
+        
+        course.getStudents().remove(student);
+        courseRepository.save(course);
+        return "redirect:/admin/view-enrolled?courseId=" + courseId + "&unenrollSuccess";
+    }
+
     @Transactional
     @PostMapping("/admin/delete-user")
     public String deleteUser(@RequestParam("userId") Long userId) {
